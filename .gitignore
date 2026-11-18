@@ -1,0 +1,9 @@
+# Secrets and local-only files: never commit these
+.env
+.render-profile/
+cards-repo/
+promo-original/
+__pycache__/
+*.pyc
+weeks/*/buffer-test.json
+bank_low.txt

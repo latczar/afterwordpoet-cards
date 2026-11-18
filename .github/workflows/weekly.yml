@@ -1,0 +1,55 @@
+name: Weekly posts
+
+on:
+  schedule:
+    - cron: "0 11 * * 0"   # Sundays 11:00 UTC = 6pm Thailand, 11am UK (noon in summer)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Make the cards only (don't push or schedule anything)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency: weekly-posts
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the quote bank
+        run: python3 weekly.py --check
+
+      - name: Make and schedule next week
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            python3 weekly.py --dry-run
+          else
+            python3 weekly.py
+          fi
+
+      - name: Upload preview (dry runs)
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview
+          path: weeks/*/tiktok/*.png
+          retention-days: 3
+
+      - name: Warn when the quote bank is low
+        if: hashFiles('bank_low.txt') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Quote bank running low"
+          if [ -z "$(gh issue list --state open --search "$title in:title" --json number --jq '.[].number')" ]; then
+            gh issue create --title "$title" --body "$(cat bank_low.txt)"
+          fi
