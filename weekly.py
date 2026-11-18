@@ -92,7 +92,7 @@ def main():
     THEMES.write_text(text.replace(theme_line, theme_line.rstrip() + " [done]", 1), encoding="utf-8")
     git("add", "--", "quotes_used.txt", "themes.txt", f"weeks/{week.name}")
     git("commit", "-q", "-m", f"Scheduled {week.name}")
-    git("pull", "--rebase", "-q")
+    git("pull", "--rebase", "--autostash", "-q")
     git("push", "-q")
 
     _, left = check_bank()

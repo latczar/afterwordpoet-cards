@@ -29,7 +29,7 @@ API = "https://api.buffer.com"
 ENV = HERE / ".env"
 CHANNELS_FILE = HERE / "buffer_channels.json"
 REPO = HERE                  # this folder is the public repo latczar/afterwordpoet-cards
-RAW = "https://raw.githubusercontent.com/latczar/afterwordpoet-cards/main/"
+RAW = "https://raw.githubusercontent.com/latczar/afterwordpoet-cards/"   # + <commit>/<path>
 # UK time each post goes out on its day (hour 24 = midnight at the end of that day).
 # Audience is US + UK. TikTok is a phone reminder, so it's timed for when Lat is awake (7am Thailand).
 POST_TIMES = {
@@ -157,16 +157,18 @@ def publish_images(week):
     """Commit the week's folder to the public repo, push, and return {relative path: public URL}."""
     if not (REPO / ".git").exists():
         sys.exit(f"{REPO} is not the afterwordpoet-cards git repo.")
+    git("add", "--", f"weeks/{week.name}")
+    if git("diff", "--cached", "--name-only").strip():
+        git("commit", "-q", "-m", f"Add cards for {week.name}")
+    git("pull", "--rebase", "--autostash", "-q")
+    git("push", "-q")   # always: also sends any commit left over from an earlier failed push
+    # Link to this exact commit, so a re-made card can never be served stale from GitHub's cache.
+    sha = git("rev-parse", "HEAD").strip()
     urls = {}
     for size in ("tiktok", "ig"):
         for png in sorted((week / size).glob("*.png")):
             rel = f"weeks/{week.name}/{size}/{png.name}"
-            urls[rel] = RAW + rel
-    git("add", "--", f"weeks/{week.name}")
-    if git("diff", "--cached", "--name-only").strip():
-        git("commit", "-q", "-m", f"Add cards for {week.name}")
-    git("pull", "--rebase", "-q")
-    git("push", "-q")   # always: also sends any commit left over from an earlier failed push
+            urls[rel] = f"{RAW}{sha}/{rel}"
     print(f"  {len(urls)} images are on GitHub")
     # Wait until every link actually serves the image.
     for rel, url in urls.items():
