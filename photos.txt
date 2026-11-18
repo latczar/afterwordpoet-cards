@@ -1,0 +1,36 @@
+# Real, free-licence Unsplash photos used behind the quotes (no Unsplash+, no watermarks, uploaded before 2023).
+# Format: <tag> <link>. A card uses photos whose tag appears in the week's folder name, else the "any" ones.
+letting https://images.unsplash.com/photo-1515694346937-94d85e41e6f0
+letting https://images.unsplash.com/photo-1629558430339-ece7d934de40
+letting https://images.unsplash.com/photo-1626759833115-9c3c41baadfd
+letting https://images.unsplash.com/photo-1585206031665-6717320858ff
+letting https://images.unsplash.com/photo-1508204175610-118a256b862d
+chosen https://images.unsplash.com/photo-1599498253880-13ffa6332c12
+chosen https://images.unsplash.com/photo-1592254765718-02cdd14502fc
+chosen https://images.unsplash.com/photo-1561287495-a3fe1fd28504
+chosen https://images.unsplash.com/photo-1657778491170-f319181c6f44
+chosen https://images.unsplash.com/photo-1514446750685-c27ac87a4403
+heartbreak https://images.unsplash.com/photo-1475113548554-5a36f1f523d6
+heartbreak https://images.unsplash.com/photo-1553586223-794143754fa4
+heartbreak https://images.unsplash.com/photo-1573830288666-9224de74df27
+heartbreak https://images.unsplash.com/photo-1534432189786-f47e376dc8c7
+heartbreak https://images.unsplash.com/photo-1424384309529-4f05c2349657
+distance https://images.unsplash.com/photo-1543797414-a0c3ad076f7c
+distance https://images.unsplash.com/photo-1603277103691-756354934c2d
+distance https://images.unsplash.com/photo-1565444007614-6b38c78224df
+distance https://images.unsplash.com/photo-1615384698544-85742d5d2279
+distance https://images.unsplash.com/photo-1643159099326-2dbd72e4f307
+christmas https://images.unsplash.com/photo-1611286079235-f4e84fccacba
+christmas https://images.unsplash.com/photo-1608211194323-10b2dda88e25
+christmas https://images.unsplash.com/photo-1608231719565-5aae14319901
+christmas https://images.unsplash.com/photo-1608875761345-cd40a7ea6034
+christmas https://images.unsplash.com/photo-1576425570777-ef6bc27f42bf
+year https://images.unsplash.com/photo-1508564733209-edec8a954e40
+year https://images.unsplash.com/photo-1594082661233-8babcdb02a89
+year https://images.unsplash.com/photo-1528789155882-e67048415894
+year https://images.unsplash.com/photo-1571627482993-388c5691cf59
+year https://images.unsplash.com/photo-1503122703469-3dbbe39d0d1c
+any https://images.unsplash.com/photo-1548661646-e890035ad72d
+any https://images.unsplash.com/photo-1646042898618-a3d104c5b836
+any https://images.unsplash.com/photo-1613578519724-22fdb5d06388
+any https://images.unsplash.com/photo-1501297875943-27f3803b4956

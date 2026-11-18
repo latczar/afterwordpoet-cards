@@ -37,3 +37,6 @@ py -3.13 push_to_buffer.py weeks/2026-11-23-letting-go             (schedules th
 - `SIMILAR`: how strict the repeat check is (0.72 by default; higher allows closer matches).
 
 `.render-profile/` is Edge's scratch profile for drawing cards. You can safely delete it.
+
+## Look (Lat's pick, 19 Nov 2026)
+`STYLE = "mix-photo"` in `make_week.py`: a real, free Unsplash photo (dimmed, cream text) on Mon/Thu/Sat of each theme, muted colours (linen, sage, terracotta, dusty blue, ochre, slate, olive) on the other days. Photos are listed per theme in `photos.txt` (free licence only, no Unsplash+, uploaded before 2023).

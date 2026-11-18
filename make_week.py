@@ -36,7 +36,9 @@ STYLES = {
 }
 STYLES["mix"] = [STYLES["warm"][0], STYLES["moody"][0], STYLES["warm"][1], STYLES["moody"][1],
                  STYLES["warm"][2], STYLES["moody"][2]]
-STYLE = "warm"   # Lat picked linen (19 Nov 2026): linen, stone, sand with dark text
+PHOTO_LIST = HERE / "photos.txt"   # STYLE "photo": real, free Unsplash photo links, one per line
+PHOTO_SHADE = "linear-gradient(180deg, rgba(14,11,9,.55) 0%, rgba(14,11,9,.68) 100%)"   # dimmed so text stands out
+STYLE = "mix-photo"   # photos on Mon/Thu/Sat, muted colours (linen, sage, terracotta...) on other days
 SUNSET = ("radial-gradient(ellipse 55% 9% at 28% 20%, rgba(255,240,228,.55), transparent 70%),"
           "radial-gradient(ellipse 45% 8% at 74% 31%, rgba(255,222,210,.5), transparent 70%),"
           "radial-gradient(ellipse 65% 10% at 40% 74%, rgba(255,232,210,.45), transparent 70%),"
@@ -61,11 +63,12 @@ body{{background:{bg};background-size:cover;background-position:center;position:
 .layer{{position:absolute;inset:0}}
 .mottle{{background-image:{mottle};background-size:cover;opacity:{mottle_op}}}
 .grain{{background-image:{grain}}}
-.wrap{{position:absolute;left:{padx}px;top:{top}%;transform:translateY(-50%);max-width:{maxw}px}}
+.shade{{background:{shade}}}
+.wrap{{position:absolute;left:{padx}px;top:{top}%;transform:translateY(-50%);max-width:{maxw}px;text-shadow:{tshadow}}}
 .q{{font-size:{fs}px;line-height:1.3;margin:0;white-space:pre-line}}
 .sig{{font-size:{sfs}px;text-align:right;margin-top:{gap}px}}
 </style></head><body>
-<div class="layer mottle"></div><div class="layer grain"></div>
+<div class="layer mottle"></div><div class="layer shade"></div><div class="layer grain"></div>
 <div class="wrap"><p class="q">{text}</p><div class="sig">- afterwordpoet</div></div>
 </body></html>"""
 
@@ -196,15 +199,38 @@ def png_size(path):
     return struct.unpack(">II", head[16:24])
 
 
-def background(i):
-    photos = sorted(p for p in BACKGROUNDS.glob("*") if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")) \
-        if BACKGROUNDS.exists() else []
-    if photos:
-        return f"url('{photos[i % len(photos)].as_uri()}')", 0.0, "#1f1c1c"
+def photo_links(week_name=""):
+    """Photo links for a week: those tagged with a word in the week's name, else the 'any' ones."""
+    if not PHOTO_LIST.exists():
+        return []
+    rows = [l.split() for l in PHOTO_LIST.read_text(encoding="utf-8").splitlines()
+            if l.strip() and not l.startswith("#") and len(l.split()) == 2]
+    tagged = [u for t, u in rows if t != "any" and t in week_name]
+    return tagged or [u for t, u in rows if t == "any"]
+
+
+PHOTO_DAYS = (0, 3, 5)   # in "mix-photo": Mon, Thu, Sat of each 7-day theme get a real photo
+COLOURS = [("#efe7da", "#2a2522"), ("#a9b8a0", "#1f2420"), ("#c47b5f", "#f6efe4"), ("#9fb3c8", "#1d2430"),
+           ("#d9b26a", "#2a2522"), ("#4a5a6a", "#f3ece0"), ("#6b7350", "#f3ece0")]
+# linen, sage, terracotta, dusty blue, ochre, slate, olive (muted, no pinks)
+
+
+def background(i, week_name=""):
+    """(css background, mottle opacity, text colour, shade) for card number i (0-based)."""
+    seed = sum(map(ord, week_name))
+    use_photo = STYLE == "photo" or (STYLE == "mix-photo" and i % 7 in PHOTO_DAYS)
+    links = photo_links(week_name) if use_photo else []
+    if links:
+        n = (i // 7) * len(PHOTO_DAYS) + (PHOTO_DAYS.index(i % 7) if i % 7 in PHOTO_DAYS else 0)
+        # Real photo behind the text, dimmed so the cream text stands out.
+        return f"url('{links[(n + seed) % len(links)]}?w=1080&h=1920&fit=crop&q=80')", 0.0, "#f6efe4", PHOTO_SHADE
     if STYLE == "pastel" and i % 3 == 2:
-        return SUNSET, 0.25, "#1f1c1c"
-    bg, fg = STYLES[STYLE][i % len(STYLES[STYLE])]
-    return bg, 1.0, fg
+        return SUNSET, 0.25, "#1f1c1c", "transparent"
+    if STYLE in ("photo", "mix-photo"):
+        bg, fg = COLOURS[(i + seed) % len(COLOURS)]
+    else:
+        bg, fg = STYLES[STYLE][i % len(STYLES[STYLE])]
+    return bg, 1.0, fg, "transparent"
 
 
 def render(browser, html_text, out, w, h, tmp):
@@ -224,15 +250,16 @@ def render(browser, html_text, out, w, h, tmp):
         print(f"  warning: {out.name} is {got[0]}x{got[1]}, expected {w}x{h}")
 
 
-def card_html(text, i, w, h):
+def card_html(text, i, w, h, week_name=""):
     lines = text.split("\n")
     longest = max(len(l) for l in lines)
     padx = 100
     maxw = w - 2 * padx
     fs = int(min(92, maxw / (longest * 0.44)))
-    bg, mottle_op, fg = background(i)
+    bg, mottle_op, fg, shade = background(i, week_name)
     top = 46 if h > w * 1.5 else 48
-    return PAGE.format(font=FONT, font_url=FONT.replace(" ", "+"), fg=fg,
+    tshadow = "0 2px 18px rgba(0,0,0,.45)" if shade != "transparent" else "none"
+    return PAGE.format(font=FONT, font_url=FONT.replace(" ", "+"), fg=fg, shade=shade, tshadow=tshadow,
                        w=w, h=h, bg=bg, mottle=MOTTLE, mottle_op=mottle_op, grain=GRAIN,
                        padx=padx, maxw=maxw, top=top, fs=fs, sfs=int(fs * 0.42),
                        gap=int(fs * 0.25), text=html.escape(text))
@@ -281,7 +308,7 @@ def make(week):
             for sub, (w, h) in SIZES.items():
                 out = week / sub / f"{i + 1:02d}.png"
                 out.unlink(missing_ok=True)
-                render(browser, card_html(q, i, w, h), out, w, h, tmp)
+                render(browser, card_html(q, i, w, h, week.name), out, w, h, tmp)
             print(f"  card {i + 1:02d} done")
 
         # Books photo: the last slide of every post, fitted to each size.
