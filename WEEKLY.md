@@ -15,6 +15,7 @@ The Buffer key is stored as the repo secret `BUFFER_API_KEY`. Locally it's in `.
 ## Refilling the quote bank (a job for Claude, every couple of months)
 1. Add new themes to the end of `themes.txt`, one per week (`YYYY-MM-DD theme`, Mondays).
 2. For each one, write `weeks/<date>-<theme-with-dashes>/lines.txt` with 7 quotes, one block per card and a blank line between blocks.
+   - Above all, super relatable: everyday moments people recognise in themselves. Mostly love or hope, but not every quote has to be.
    - Match the voice in `quotes_used.txt`: first person, plain everyday words, 2–4 short lines of at most about 28 characters each, with a quiet turn at the end.
    - British spelling, no emojis, no hashtags.
    - No clichés or filler: no "journey", "tapestry", "embrace", "healing isn't linear", "you are enough" or "the universe".

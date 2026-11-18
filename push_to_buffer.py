@@ -37,6 +37,28 @@ POST_TIMES = {
     "facebook":  (21, 0),
     "tiktok":    (24, 0),   # midnight UK = 7pm New York, 7am Thailand
 }
+EXTRA_TIKTOK_TIME = (13, 0)  # second daily TikTok: 1pm UK = 8am New York, 8pm Thailand
+
+
+def create_post(service, channel_id, week, card, quote, due, urls, caption, draft=False):
+    """Create one Buffer post: the card, then the books slide if the week has one. Returns post id or raises."""
+    cfg = SERVICES[service]
+    base = f"weeks/{week.name}/{cfg['size']}/"
+    assets = [{"image": {"url": urls[base + card], "metadata": {"altText": quote.replace("\n", " ")}}}]
+    if base + "books.png" in urls:
+        assets.append({"image": {"url": urls[base + "books.png"],
+                                 "metadata": {"altText": "Three afterword poet poetry books lying on a sunlit cream bedsheet."}}})
+    post = {"channelId": channel_id, "text": caption, "assets": assets,
+            "schedulingType": cfg["scheduling"], "mode": "customScheduled",
+            "dueAt": due.strftime("%Y-%m-%dT%H:%M:%SZ"), "needsApproval": False}
+    if cfg["metadata"]:
+        post["metadata"] = cfg["metadata"]
+    if draft:
+        post["saveToDraft"] = True
+    res = gql(CREATE_POST, {"input": post})["createPost"]
+    if not res.get("post"):
+        raise RuntimeError(res.get("message") or "unknown Buffer error")
+    return res["post"]["id"]
 
 # Which card size and publishing style each service gets.
 SERVICES = {

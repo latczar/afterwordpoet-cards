@@ -294,15 +294,24 @@ def make(week):
 
 
 def mark_used(week):
-    if f"# {week.name}\n" in USED.read_text(encoding="utf-8"):
-        print(f"{week.name} is already in {USED.name}")
-        return
+    """Add (or refresh) this week's section in quotes_used.txt."""
     quotes = read_blocks(week / "lines.txt")
-    with USED.open("a", encoding="utf-8") as f:
-        f.write(f"\n# {week.name}\n")
-        for q in quotes:
-            f.write(f"\n{q}\n")
-    print(f"Added {len(quotes)} quotes to {USED.name}")
+    section = f"# {week.name}\n" + "".join(f"\n{q}\n" for q in quotes)
+    lines = USED.read_text(encoding="utf-8").splitlines(keepends=True)
+    out, skipping, replaced = [], False, False
+    for line in lines:
+        if line.startswith("# "):
+            if line.strip() == f"# {week.name}":
+                skipping, replaced = True, True
+                out.append(section + "\n")
+                continue
+            skipping = False
+        if not skipping:
+            out.append(line)
+    if not replaced:
+        out.append("\n" + section)
+    USED.write_text("".join(out), encoding="utf-8")
+    print(f"Recorded {len(quotes)} quotes for {week.name} in {USED.name}")
 
 
 if __name__ == "__main__":
