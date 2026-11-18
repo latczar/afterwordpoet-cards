@@ -205,8 +205,39 @@ def photo_links(week_name=""):
         return []
     rows = [l.split() for l in PHOTO_LIST.read_text(encoding="utf-8").splitlines()
             if l.strip() and not l.startswith("#") and len(l.split()) == 2]
-    tagged = [u for t, u in rows if t != "any" and t in week_name]
-    return tagged or [u for t, u in rows if t == "any"]
+    tagged = [u for t, u in rows if t != "any" and t in week_name and u not in BAD_PHOTOS]
+    return tagged or [u for t, u in rows if t == "any" and u not in BAD_PHOTOS]
+
+
+BAD_PHOTOS = set()
+PHOTO_CHECK = """<!doctype html><html><body>{imgs}<script>
+var imgs = Array.from(document.images), left = imgs.length;
+function done() {{ if (--left === 0) document.body.setAttribute('data-done', '1'); }}
+imgs.forEach(function (im) {{
+  im.onload = function () {{ im.setAttribute('data-ok', im.naturalWidth > 0 ? '1' : '0'); done(); }};
+  im.onerror = function () {{ im.setAttribute('data-ok', '0'); done(); }};
+}});
+</script></body></html>"""
+
+
+def check_photos(browser, tmp, week_name):
+    """Load this week's photos once; any that fail are dropped so those cards use a colour instead."""
+    links = photo_links(week_name)
+    if STYLE not in ("photo", "mix-photo") or not links:
+        return
+    imgs = "".join(f'<img src="{u}?w=1080&h=1920&fit=crop&q=80" data-u="{u}">' for u in links)
+    page = tmp / "photo-check.html"
+    page.write_text(PHOTO_CHECK.format(imgs=imgs), encoding="utf-8")
+    cmd = [browser, "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
+           f"--user-data-dir={HERE / '.render-profile'}", "--virtual-time-budget=15000", "--dump-dom", page.as_uri()]
+    if sys.platform != "win32":
+        cmd.insert(1, "--no-sandbox")
+    dom = subprocess.run(cmd, capture_output=True, text=True, timeout=180).stdout
+    for u in links:
+        tail = dom.split(f'data-u="{u}"')[1].split('>')[0] if f'data-u="{u}"' in dom else ''
+        if 'data-ok="1"' not in tail:
+            BAD_PHOTOS.add(u)
+    print(f"  photo check: {len(links) - len([u for u in links if u in BAD_PHOTOS])}/{len(links)} photos loaded")
 
 
 PHOTO_DAYS = (0, 3, 5)   # in "mix-photo": Mon, Thu, Sat of each 7-day theme get a real photo
@@ -304,6 +335,7 @@ def make(week):
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
         check_font(browser, tmp)
+        check_photos(browser, tmp, week.name)
         for i, q in enumerate(quotes):
             for sub, (w, h) in SIZES.items():
                 out = week / sub / f"{i + 1:02d}.png"

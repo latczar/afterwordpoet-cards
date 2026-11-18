@@ -88,6 +88,19 @@ def main():
     if "--check" in sys.argv:
         ok, _ = check_bank()
         sys.exit(0 if ok else 1)
+    if "--render-test" in sys.argv:          # prove this machine can draw a photo card and a colour card
+        import tempfile
+        with tempfile.TemporaryDirectory() as t:
+            tmp = Path(t)
+            b = make_week.find_browser()
+            make_week.check_font(b, tmp)
+            make_week.check_photos(b, tmp, "render-test-hoping")
+            for i in (0, 1):
+                out = tmp / f"test{i}.png"
+                make_week.render(b, make_week.card_html("Render test. Still here.", i, 1080, 1920, "render-test-hoping"),
+                                 out, 1080, 1920, tmp)
+                print(f"  render test: {'photo' if i == 0 else 'colour'} card OK ({out.stat().st_size // 1024} KB)")
+        return
 
     if os.environ.get("GITHUB_ACTIONS") == "true":
         git("config", "user.name", "github-actions[bot]")

@@ -31,6 +31,7 @@ jobs:
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            python3 weekly.py --render-test
             python3 weekly.py --dry-run
           else
             python3 weekly.py
