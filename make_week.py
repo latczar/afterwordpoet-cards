@@ -68,6 +68,32 @@ html,body{{margin:0;width:{w}px;height:{h}px;overflow:hidden;background:#000;pos
 </style></head><body><div class="bg"></div><div class="fg"></div></body></html>"""
 
 
+FONT_CHECK = """<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family={font_url}&display=block" rel="stylesheet"></head>
+<body style="font-family:'{font}'">x<script>
+document.fonts.load("40px '{font}'").then(function () {{
+  var ok = Array.from(document.fonts).some(function (f) {{
+    return f.family.replace(/["']/g, '') === '{font}' && f.status === 'loaded'; }});
+  document.body.setAttribute('data-font', ok ? 'ok' : 'missing');
+}});
+</script></body></html>"""
+
+
+def check_font(browser, tmp):
+    """Stop before making cards if the handwritten font can't be loaded (they'd look wrong)."""
+    page = tmp / "font-check.html"
+    page.write_text(FONT_CHECK.format(font=FONT, font_url=FONT.replace(" ", "+")), encoding="utf-8")
+    cmd = [browser, "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
+           f"--user-data-dir={HERE / '.render-profile'}", "--virtual-time-budget=8000",
+           "--dump-dom", page.as_uri()]
+    if sys.platform != "win32":
+        cmd.insert(1, "--no-sandbox")
+    dom = subprocess.run(cmd, capture_output=True, text=True, timeout=120).stdout
+    if 'data-font="ok"' not in dom:
+        sys.exit(f"The {FONT} font didn't load, so no cards were made (they'd look wrong). Try again later.")
+    print(f"  font check: {FONT} loaded")
+
+
 def read_blocks(path):
     return parse_blocks(path.read_text(encoding="utf-8").splitlines())
 
@@ -239,6 +265,7 @@ def make(week):
         (week / sub).mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
+        check_font(browser, tmp)
         for i, q in enumerate(quotes):
             for sub, (w, h) in SIZES.items():
                 out = week / sub / f"{i + 1:02d}.png"

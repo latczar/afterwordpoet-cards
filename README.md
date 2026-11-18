@@ -29,7 +29,7 @@ py -3.13 push_to_buffer.py weeks/2026-11-23-letting-go             (schedules th
 - Needs `BUFFER_API_KEY=...` in `.env` here. Create the key at publish.buffer.com/settings/api. Never share it.
 - Each post is the quote card, then the books slide, with `caption.txt`. One post a day, starting on the date in the week's folder name: Instagram and Facebook at 9pm UK (4pm New York), TikTok at midnight UK (7pm New York, 7am Thailand). Change `POST_TIMES` at the top of `push_to_buffer.py`.
 - TikTok posts arrive on your phone as a Buffer reminder. Open it, tap Add sound (the Recommended list shows trending sounds) and post. Keep TikTok a personal or creator account: business accounts can't use trending songs.
-- Buffer needs public image links, so the cards are pushed to github.com/latczar/afterwordpoet-cards (cloned in `cards-repo/`, which pushes with latczar's `gh` login).
+- Buffer needs public image links. This folder *is* the public repo github.com/latczar/afterwordpoet-cards (it pushes with latczar's `gh` login), and the links point at the exact commit, so a re-made card is never served stale.
 - `buffer.json` in a week's folder records what was sent, so a week can't go out twice by accident (use `--force` to override).
 
 ## Settings (top of make_week.py)
