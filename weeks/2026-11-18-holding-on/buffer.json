@@ -18,12 +18,6 @@
     "dueAt": "2026-11-19T00:00:00Z"
   },
   {
-    "card": "07.png",
-    "service": "tiktok",
-    "postId": "6afdf850886993bf4afdafe7",
-    "dueAt": "2026-11-19T13:00:00Z"
-  },
-  {
     "card": "02.png",
     "service": "instagram",
     "postId": "6afdf851ad38b37352fb203d",
@@ -42,12 +36,6 @@
     "dueAt": "2026-11-20T00:00:00Z"
   },
   {
-    "card": "08.png",
-    "service": "tiktok",
-    "postId": "6afdf853badbce99d006365a",
-    "dueAt": "2026-11-20T13:00:00Z"
-  },
-  {
     "card": "03.png",
     "service": "instagram",
     "postId": "6afdf854886993bf4afdb24c",
@@ -64,11 +52,5 @@
     "service": "tiktok",
     "postId": "6afdf855ad38b37352fb2360",
     "dueAt": "2026-11-21T00:00:00Z"
-  },
-  {
-    "card": "09.png",
-    "service": "tiktok",
-    "postId": "6afdf856ad38b37352fb23de",
-    "dueAt": "2026-11-21T13:00:00Z"
   }
 ]

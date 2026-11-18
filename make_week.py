@@ -272,6 +272,8 @@ def make(week):
     browser = find_browser()
     for sub in SIZES:
         (week / sub).mkdir(exist_ok=True)
+        for old in (week / sub).glob("[0-9][0-9].png"):   # drop cards left over from a longer lines.txt
+            old.unlink()
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
         check_font(browser, tmp)

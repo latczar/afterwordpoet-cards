@@ -4,10 +4,8 @@
   python3 weekly.py --dry-run  make any needed cards and show the plan; push and schedule nothing
   python3 weekly.py --check    check the quote bank for repeats and missing quotes
 
-One theme per week: weeks/<date>-<theme>/lines.txt holds 2 quotes per day.
-  quotes 1..days         -> Instagram + Facebook at 9pm UK, TikTok at midnight UK
-  quotes days+1..2*days  -> a second TikTok at 1pm UK
-where days = gap to the next theme in themes.txt (normally 7).
+One theme per week: weeks/<date>-<theme>/lines.txt holds 1 quote per day (normally 7):
+Instagram + Facebook at 9pm UK, TikTok at midnight UK. days = gap to the next theme in themes.txt.
 Only ~3 days are queued at a time, so Buffer's free plan (10 queued posts per account) is never full.
 If the quotes for an upcoming week are missing, the job fails and GitHub emails Lat.
 """
@@ -47,15 +45,12 @@ def week_days(themes, i):
 
 
 def slots(start, days, quotes):
-    """[(card, service, due UTC, quote index)] for a week."""
+    """[(card, service, due UTC, quote index)] for a week: one quote a day on every platform."""
     out = []
-    for d in range(days):
+    for d in range(min(days, len(quotes))):
         day = start + timedelta(days=d)
-        if d < len(quotes):
-            for svc in ("instagram", "facebook", "tiktok"):
-                out.append((f"{d + 1:02d}.png", svc, pb.uk_to_utc(day, *pb.POST_TIMES[svc]), d))
-        if days + d < len(quotes):
-            out.append((f"{days + d + 1:02d}.png", "tiktok", pb.uk_to_utc(day, *pb.EXTRA_TIKTOK_TIME), days + d))
+        for svc in ("instagram", "facebook", "tiktok"):
+            out.append((f"{d + 1:02d}.png", svc, pb.uk_to_utc(day, *pb.POST_TIMES[svc]), d))
     return out
 
 
@@ -72,9 +67,9 @@ def check_bank():
             break
         written += 1
         quotes = make_week.read_blocks(lines)
-        want = 2 * week_days(themes, i)
+        want = week_days(themes, i)
         if len(quotes) != want:
-            print(f"{week.name}: has {len(quotes)} quotes, needs {want} (2 a day)")
+            print(f"{week.name}: has {len(quotes)} quotes, needs {want} (1 a day)")
             ok = False
         for n, o, r in make_week.find_clashes(quotes, seen):
             print(f"{week.name}: {int(r * 100)}% close\n  NEW: {n!r}\n  OLD: {o!r}")
