@@ -27,7 +27,16 @@ SIMILAR = 0.72                       # 0-1: how close a line may get to an old o
 FONT = "Patrick Hand"                # any Google Font name, e.g. "Gaegu", "Short Stack"
 
 SIZES = {"tiktok": (1080, 1920), "ig": (1080, 1350)}
-PAPER = ["#b9cbb0", "#f2c3a7", "#f1c1cc", "#cdbfe6", "#bcd3ec"]  # sage, peach, pink, lilac, blue
+PAPER = ["#b9cbb0", "#f2c3a7", "#f1c1cc", "#cdbfe6", "#bcd3ec"]  # sage, peach, pink, lilac, blue (old look)
+# Card looks: (background, text colour). STYLE picks which set the cards rotate through.
+STYLES = {
+    "pastel": [(c, "#1f1c1c") for c in PAPER],
+    "warm":   [("#efe7da", "#2a2522"), ("#ddd3c4", "#2a2522"), ("#e8d8c3", "#2a2522")],   # linen, stone, sand
+    "moody":  [("#2f3b32", "#efe8dc"), ("#1f2a3a", "#efe8dc"), ("#3b2c2a", "#efe8dc")],   # forest, navy, oxblood
+}
+STYLES["mix"] = [STYLES["warm"][0], STYLES["moody"][0], STYLES["warm"][1], STYLES["moody"][1],
+                 STYLES["warm"][2], STYLES["moody"][2]]
+STYLE = "warm"   # Lat picked linen (19 Nov 2026): linen, stone, sand with dark text
 SUNSET = ("radial-gradient(ellipse 55% 9% at 28% 20%, rgba(255,240,228,.55), transparent 70%),"
           "radial-gradient(ellipse 45% 8% at 74% 31%, rgba(255,222,210,.5), transparent 70%),"
           "radial-gradient(ellipse 65% 10% at 40% 74%, rgba(255,232,210,.45), transparent 70%),"
@@ -48,7 +57,7 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8">
 <style>
 html,body{{margin:0;width:{w}px;height:{h}px;overflow:hidden}}
 body{{background:{bg};background-size:cover;background-position:center;position:relative;
-  font-family:'{font}',cursive;color:#1f1c1c}}
+  font-family:'{font}',cursive;color:{fg}}}
 .layer{{position:absolute;inset:0}}
 .mottle{{background-image:{mottle};background-size:cover;opacity:{mottle_op}}}
 .grain{{background-image:{grain}}}
@@ -191,11 +200,11 @@ def background(i):
     photos = sorted(p for p in BACKGROUNDS.glob("*") if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")) \
         if BACKGROUNDS.exists() else []
     if photos:
-        return f"url('{photos[i % len(photos)].as_uri()}')", 0.0
-    # Rotate: paper, paper, sunset, paper, paper, sunset ...
-    if i % 3 == 2:
-        return SUNSET, 0.25
-    return PAPER[i % len(PAPER)], 1.0
+        return f"url('{photos[i % len(photos)].as_uri()}')", 0.0, "#1f1c1c"
+    if STYLE == "pastel" and i % 3 == 2:
+        return SUNSET, 0.25, "#1f1c1c"
+    bg, fg = STYLES[STYLE][i % len(STYLES[STYLE])]
+    return bg, 1.0, fg
 
 
 def render(browser, html_text, out, w, h, tmp):
@@ -221,9 +230,9 @@ def card_html(text, i, w, h):
     padx = 100
     maxw = w - 2 * padx
     fs = int(min(92, maxw / (longest * 0.44)))
-    bg, mottle_op = background(i)
+    bg, mottle_op, fg = background(i)
     top = 46 if h > w * 1.5 else 48
-    return PAGE.format(font=FONT, font_url=FONT.replace(" ", "+"),
+    return PAGE.format(font=FONT, font_url=FONT.replace(" ", "+"), fg=fg,
                        w=w, h=h, bg=bg, mottle=MOTTLE, mottle_op=mottle_op, grain=GRAIN,
                        padx=padx, maxw=maxw, top=top, fs=fs, sfs=int(fs * 0.42),
                        gap=int(fs * 0.25), text=html.escape(text))
