@@ -2,7 +2,7 @@ name: Weekly posts
 
 on:
   schedule:
-    - cron: "0 11 * * 0"   # Sundays 11:00 UTC = 6pm Thailand, 11am UK (noon in summer)
+    - cron: "0 11 * * *"   # every day 11:00 UTC = 6pm Thailand, 11am UK (noon in summer): queue the next 3 days
   workflow_dispatch:
     inputs:
       dry_run:
