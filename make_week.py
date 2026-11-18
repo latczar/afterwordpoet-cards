@@ -108,16 +108,36 @@ def norm(text):
     return " ".join(re.sub(r"[^a-z' ]", " ", text).split())
 
 
+STOP = set("""a an the and or but so to of in on at for with from by as is are was were be been am i
+i'm i've i'd you you're your yours me my mine we us our it it's its this that these those there their
+they them he she his her not no do does did don't didn't just only still even all some any more most
+very can could would should will what who when where why how than then if like""".split())
+
+
+def key_words(text):
+    return {w.rstrip("'s") for w in norm(text).split() if w not in STOP and len(w) > 2}
+
+
+def similarity(a, b):
+    """Highest of: wording match, and share of key words (catches same idea, different words)."""
+    r = difflib.SequenceMatcher(None, norm(a), norm(b)).ratio()
+    ka, kb = key_words(a), key_words(b)
+    if len(ka) >= 3 and len(kb) >= 3:
+        overlap = len(ka & kb) / min(len(ka), len(kb))
+        r = max(r, overlap * 0.9)   # e.g. 4 of 5 key words shared -> 0.72
+    return r
+
+
 def find_clashes(new, old):
     """Pairs that are too similar: against posted quotes and within this week."""
     out = []
     for i, n in enumerate(new):
         for o in old:
-            r = difflib.SequenceMatcher(None, norm(n), norm(o)).ratio()
+            r = similarity(n, o)
             if r >= SIMILAR:
                 out.append((n, o, r))
         for m in new[i + 1:]:
-            r = difflib.SequenceMatcher(None, norm(n), norm(m)).ratio()
+            r = similarity(n, m)
             if r >= SIMILAR:
                 out.append((n, m, r))
     return out

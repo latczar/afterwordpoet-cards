@@ -7,3 +7,4 @@ __pycache__/
 *.pyc
 weeks/*/buffer-test.json
 bank_low.txt
+old_posts_contact.html
