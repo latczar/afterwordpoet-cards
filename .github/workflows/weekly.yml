@@ -29,6 +29,7 @@ jobs:
       - name: Make and schedule next week
         env:
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
             python3 weekly.py --render-test
@@ -49,8 +50,23 @@ jobs:
         if: hashFiles('bank_low.txt') != ''
         env:
           GH_TOKEN: ${{ github.token }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
           title="Quote bank running low"
           if [ -z "$(gh issue list --state open --search "$title in:title" --json number --jq '.[].number')" ]; then
             gh issue create --title "$title" --body "$(cat bank_low.txt)"
+            if [ -n "$NTFY_TOPIC" ]; then   # phone alert, once (only when the issue is first opened)
+              curl -s -H "Title: afterwordpoet: quote bank running low" -H "Tags: books" \
+                -d "$(cat bank_low.txt)" "https://ntfy.sh/$NTFY_TOPIC" > /dev/null || true
+            fi
           fi
+
+      - name: Phone alert if anything failed
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          [ -n "$NTFY_TOPIC" ] || exit 0
+          curl -s -H "Title: afterwordpoet: daily posting job failed" -H "Priority: high" -H "Tags: warning" \
+            -H "Click: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            -d "Some posts may not be queued. Tap to see what went wrong." "https://ntfy.sh/$NTFY_TOPIC" > /dev/null || true

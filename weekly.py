@@ -8,11 +8,14 @@ One theme per week: weeks/<date>-<theme>/lines.txt holds 1 quote per day (normal
 Instagram + Facebook at 9pm UK, TikTok at midnight UK. days = gap to the next theme in themes.txt.
 Only ~3 days are queued at a time, so Buffer's free plan (10 queued posts per account) is never full.
 If the quotes for an upcoming week are missing, the job fails and GitHub emails Lat.
+Phone alerts go through the ntfy app (topic in the NTFY_TOPIC secret): one when each new theme is
+queued, plus failures and a low quote bank (sent from the workflow). Nothing else, to keep it quiet.
 """
 import json
 import os
 import subprocess
 import sys
+import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -36,6 +39,32 @@ def all_themes():
         d, _, theme = s.replace("[done]", "").strip().partition(" ")
         out.append((line, date.fromisoformat(d), HERE / "weeks" / f"{d}-{'-'.join(theme.lower().split())}"))
     return out
+
+
+def notify(title, message, tags=""):
+    """Send a phone alert through ntfy. Skipped when NTFY_TOPIC isn't set; never stops the job."""
+    topic = os.environ.get("NTFY_TOPIC", "").strip()
+    if not topic:
+        return
+    headers = {"Title": title}
+    if tags:
+        headers["Tags"] = tags
+    try:
+        req = urllib.request.Request("https://ntfy.sh/" + topic, data=message.encode("utf-8"),
+                                     headers=headers, method="POST")
+        urllib.request.urlopen(req, timeout=15).read()
+    except Exception as e:
+        print(f"  (phone alert not sent: {e})")
+
+
+def last_post_day(themes):
+    """Last day with quotes written: the end of the last week in a row that has a lines.txt."""
+    last = None
+    for i, (_, start, week) in enumerate(themes):
+        if not (week / "lines.txt").exists():
+            break
+        last = start + timedelta(days=week_days(themes, i) - 1)
+    return last
 
 
 def week_days(themes, i):
@@ -141,7 +170,8 @@ def main():
             continue
 
         make_week.mark_used(week)
-        if not line.strip().endswith("[done]"):
+        new_theme = not line.strip().endswith("[done]")
+        if new_theme:
             text = THEMES.read_text(encoding="utf-8")
             THEMES.write_text(text.replace(line, line.rstrip() + " [done]", 1), encoding="utf-8")
         urls = pb.publish_images(week)
@@ -156,6 +186,13 @@ def main():
             except Exception as e:                     # keep going; report at the end
                 failures += 1
                 print(f"  FAILED {card} -> {svc}: {e}")
+        if new_theme:
+            name = week.name[11:].replace("-", " ")
+            end = last_post_day(themes)
+            notify(f"New theme queued: {name}",
+                   f"Starts {start:%a %d %b}, {min(days, len(quotes))} posts on Instagram, Facebook and TikTok. "
+                   f"Quotes are written up to {end:%a %d %b %Y}." if end else f"Starts {start:%a %d %b}.",
+                   tags="memo")
         git("add", "--", "quotes_used.txt", "themes.txt", f"weeks/{week.name}")
         git("commit", "-q", "-m", f"Queue posts for {week.name}")
         git("pull", "--rebase", "--autostash", "-q")

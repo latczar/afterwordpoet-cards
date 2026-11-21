@@ -1,6 +1,8 @@
 # afterwordpoet post generator
 
-**This runs by itself on GitHub every Sunday.** See `WEEKLY.md`. Quotes are written ahead in `weeks/*/lines.txt`, currently up to the end of January 2027.
+**This runs by itself on GitHub every day** (queues the next 3 days in Buffer). See `WEEKLY.md`. Quotes are written ahead in `weeks/*/lines.txt`, currently up to Fri 2 April 2027.
+
+Phone alerts come through the ntfy app (topic in the `NTFY_TOPIC` repo secret): one when each new theme is queued, one if the daily job fails, one when the quotes are running low. Nothing else.
 
 Makes a week of quote cards in the afterwordpoet style: handwritten font, pastel paper or soft sunset background, "- afterwordpoet" signature. The cards are drawn by code (Microsoft Edge saves each one as a PNG), not by an image AI, so the text is always exactly what's in `lines.txt`.
 
